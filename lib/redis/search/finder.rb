@@ -19,7 +19,9 @@ class Redis
     # * Redis::Search.complete("Tag","red") => ["Redis", "Redmine"]
     # * Redis::Search.complete("Tag","redi") => ["Redis"]
     def self.complete(type, w, options = {})
+      page = options[:page] || 1
       limit = options[:limit] || 10 
+      order = options[:order] || "desc"
       conditions = options[:conditions] || []
       return [] if (w.blank? and conditions.blank?) or type.blank?
       
@@ -29,10 +31,10 @@ class Redis
       prefix = w.downcase
       key = Search.mk_complete_key(type)
       
-      
+      last_rank = limit * page
       if start = Redis::Search.config.redis.zrank(key,prefix)
-        count = limit
-        max_range = start+(rangelen*limit)-1
+        count = last_rank
+        max_range = start+(rangelen*last_rank)-1
         range = Redis::Search.config.redis.zrange(key,start,max_range)
         while prefix_matchs.length <= count
           start += rangelen
@@ -79,6 +81,7 @@ class Redis
       end
       
       # 如果有条件，这里再次组合一下
+      puts condition_keys
       if !condition_keys.blank?
         condition_keys << temp_store_key if !words. blank?
         temp_store_key = "tmpsinterstore:#{condition_keys.join('+')}"
@@ -87,11 +90,12 @@ class Redis
           Redis::Search.config.redis.expire(temp_store_key,86400)
         end
       end
-      
+      skip = (page - 1) * limit
       ids = Redis::Search.config.redis.sort(temp_store_key,
-                                            :limit => [0,limit], 
+                                            :limit => [skip,limit], 
                                             :by => Search.mk_score_key(type,"*"),
-                                            :order => "desc")
+                                            :order => order)
+      puts ids
       return [] if ids.blank?
       hmget(type,ids)
     end
