@@ -16,6 +16,7 @@ class Redis
         ext_fields = options[:ext_fields] || []
         score_field = options[:score_field] || :created_at
         condition_fields = options[:condition_fields] || []
+        index_condition = options[:index_condition]
         # Add score field to ext_fields
         ext_fields |= [score_field]
         # Add condition fields to ext_fields
@@ -35,17 +36,18 @@ class Redis
           end
 
           def redis_search_index_create
-            s = Search::Index.new(:title => self.#{title_field}, 
-                                  :id => self.id, 
-                                  :exts => self.redis_search_fields_to_hash(#{ext_fields.inspect}), 
-                                  :type => self.class.to_s,
-                                  :condition_fields => #{condition_fields},
-                                  :score => self.#{score_field}.to_i,
-                                  :prefix_index_enable => #{prefix_index_enable})
-            s.save
-            # release s
-            s = nil
-            true
+            if conditions(index_condition)
+              s = Search::Index.new(:title => self.#{title_field}, 
+                                    :id => self.id, 
+                                    :exts => self.redis_search_fields_to_hash(#{ext_fields.inspect}), 
+                                    :type => self.class.to_s,
+                                    :condition_fields => #{condition_fields},
+                                    :score => self.#{score_field}.to_i,
+                                    :prefix_index_enable => #{prefix_index_enable})
+              s.save
+              # release s
+              s = nil
+              true
           end
 
           before_destroy :redis_search_index_destroy
@@ -98,6 +100,23 @@ class Redis
           end
         )
       end
+      
+      private 
+        def conditions(hash)
+          if hash.blank?
+            return true
+          end
+          c = ""
+          hash.keys.each_with_index do |key,i|
+            str = "self.#{key.to_s}" + i.to_s
+            if i == 0
+              c = str
+            else
+              c = c + " and " + str
+            end
+          end
+          c
+        end
     end
   end
 end
