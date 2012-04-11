@@ -17,6 +17,7 @@ class Redis
         score_field = options[:score_field] || :created_at
         condition_fields = options[:condition_fields] || []
         index_condition = options[:index_condition]
+        puts index_condition
         # Add score field to ext_fields
         ext_fields |= [score_field]
         # Add condition fields to ext_fields
@@ -36,6 +37,7 @@ class Redis
           end
 
           def redis_search_index_create
+            puts index_condition
             if conditions(index_condition)
               s = Search::Index.new(:title => self.#{title_field}, 
                                     :id => self.id, 
@@ -48,6 +50,7 @@ class Redis
               # release s
               s = nil
               true
+            end
           end
 
           before_destroy :redis_search_index_destroy
