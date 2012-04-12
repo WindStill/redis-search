@@ -3,6 +3,8 @@ require "redis-search"
 namespace :redis_search do
   desc "Redis-Search index data to Redis"
   task :index => :environment do
+    puts "deleting keys ------------- #{Redis::Search.config.redis.keys.size}"
+    Redis::Search.config.redis.keys.each{|k| Redis::Search.config.redis.del k}
     tm = Time.now
     count = 0
     puts "redis-search index".upcase.rjust(120)
