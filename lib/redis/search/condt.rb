@@ -6,10 +6,13 @@ class Redis
           return "true"
         end
         hash = MultiJson.decode(json)
-        puts hash.keys
         c = ""
         hash.keys.each_with_index do |key,i|
-          str = "self.#{key.to_s}" + i.to_s
+          if key.to_s.include? " "
+            str = "self.#{key.to_s}" + hash[key].to_s
+          else
+            str = "self.#{key.to_s} == " + hash[key].to_s
+          end
           if i == 0
             c = str
           else
