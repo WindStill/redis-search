@@ -81,7 +81,6 @@ class Redis
       end
       
       # 如果有条件，这里再次组合一下
-      puts condition_keys
       if !condition_keys.blank?
         condition_keys << temp_store_key if !words. blank?
         temp_store_key = "tmpsinterstore:#{condition_keys.join('+')}"
@@ -95,7 +94,6 @@ class Redis
                                             :limit => [skip,limit], 
                                             :by => Search.mk_score_key(type,"*"),
                                             :order => order)
-      puts ids
       return [] if ids.blank?
       hmget(type,ids)
     end
