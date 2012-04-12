@@ -3,7 +3,7 @@ class Redis
     class Condt
       def self.make_condition(json)
         if json == "null" or MultiJson.decode(json).blank?
-          return true
+          return "true"
         end
         hash = MultiJson.decode(json)
         puts hash.keys
@@ -16,7 +16,6 @@ class Redis
             c = c + " and " + str
           end
         end
-        puts c
         c
       end
     end

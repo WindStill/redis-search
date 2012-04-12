@@ -36,8 +36,7 @@ class Redis
           end
 
           def redis_search_index_create
-            if Search::Condt.make_condition('#{index_condition}')
-              puts 111
+            if eval(Search::Condt.make_condition('#{index_condition}'))
               s = Search::Index.new(:title => self.#{title_field}, 
                                     :id => self.id, 
                                     :exts => self.redis_search_fields_to_hash(#{ext_fields.inspect}), 
