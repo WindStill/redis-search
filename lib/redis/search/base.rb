@@ -86,7 +86,7 @@ class Redis
             # puts self.redis_search_index_need_reindex
             # puts self.#{title_field}_was
             # puts self.#{title_field}
-            if self.redis_search_index_need_reindex
+            if self.redis_search_index_need_reindex or !eval(Search::Condt.make_condition('#{index_condition}'))
               Search::Index.remove(:id => self.id, :title => self.#{title_field}_was, :type => self.class.to_s)
             end
             true
@@ -94,7 +94,7 @@ class Redis
 
           after_save :redis_search_index_update
           def redis_search_index_update
-            if self.redis_search_index_need_reindex or self.new_record?
+            if self.redis_search_index_need_reindex or self.new_record? or eval(Search::Condt.make_condition('#{index_condition}'))
               self.redis_search_index_create
             end
             true
