@@ -16,8 +16,7 @@ class Redis
         ext_fields = options[:ext_fields] || []
         score_field = options[:score_field] || :created_at
         condition_fields = options[:condition_fields] || []
-        index_condition = options[:index_condition]
-        puts index_condition
+        index_condition = MultiJson.encode options[:index_condition]
         # Add score field to ext_fields
         ext_fields |= [score_field]
         # Add condition fields to ext_fields
@@ -37,8 +36,8 @@ class Redis
           end
 
           def redis_search_index_create
-            puts index_condition
-            if conditions(index_condition)
+            if Search::Condt.make_condition('#{index_condition}')
+              puts 111
               s = Search::Index.new(:title => self.#{title_field}, 
                                     :id => self.id, 
                                     :exts => self.redis_search_fields_to_hash(#{ext_fields.inspect}), 
@@ -101,25 +100,10 @@ class Redis
             end
             true
           end
+          
         )
       end
       
-      private 
-        def conditions(hash)
-          if hash.blank?
-            return true
-          end
-          c = ""
-          hash.keys.each_with_index do |key,i|
-            str = "self.#{key.to_s}" + i.to_s
-            if i == 0
-              c = str
-            else
-              c = c + " and " + str
-            end
-          end
-          c
-        end
     end
   end
 end
