@@ -8,7 +8,7 @@ class Redis
     end    
 
     def self.complete(type, w, options = {})
-      ids_all = Redis::Search.complete_ids(type, w, options)
+      ids_all = Search.complete_ids(type, w, options)
       return { :return => [], :total => 0 } if ids_all.blank?
       page = options[:page] || 1
       limit = options[:limit] || 10
@@ -19,7 +19,7 @@ class Redis
     
     def self.query(type, text, options = {})
       tm = Time.now
-      ids_all = Redis::Search.query_ids(type, text, options)
+      ids_all = Search.query_ids(type, text, options)
       return { :return => [], :total => 0 } if ids_all.blank?
       page = options[:page] || 1
       limit = options[:limit] || 10
@@ -30,7 +30,7 @@ class Redis
     end
     
     def self.complete_and_query(type, text, options = {})
-      ids_complete = Redis::Search.complete_ids(type, text, options)
+      ids_complete = Search.complete_ids(type, text, options)
       ids_query = Redis::Search.query_ids(type, text, options)
       ids_all = ids_complete | ids_query
       page = options[:page] || 1
