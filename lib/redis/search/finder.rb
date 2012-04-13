@@ -14,7 +14,7 @@ class Redis
       limit = options[:limit] || 10
       offset = (page - 1) * limit
       ids = ids_all[offset, limit]
-      hmget(type,ids)
+      hash = { :result => hmget(type,ids), :total => ids_all.size }
     end
     
     def self.query(type, text, options = {})
@@ -26,7 +26,7 @@ class Redis
       offset = (page - 1) * limit
       ids = ids_all[offset, limit]
       Search.info("{#{type} : \"#{text}\"} | Time spend: #{Time.now - tm}s")
-      hmget(type,ids)
+      hash = { :result => hmget(type,ids), :total => ids_all.size }
     end
     
     def self.complete_and_query(type, text, options = {})
@@ -37,7 +37,7 @@ class Redis
       limit = options[:limit] || 10
       offset = (page - 1) * limit
       ids = ids_all[offset, limit]
-      hmget(type,ids)
+      hash = { :result => hmget(type,ids), :total => ids_all.size }
     end
     # Use for short title search, this method is search by chars, for example Tag, User, Category ...
     # 
