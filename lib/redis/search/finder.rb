@@ -7,6 +7,38 @@ class Redis
       _split(text)
     end    
 
+    def self.complete(type, w, options = {})
+      ids_all = Redis::Search.complete_ids(type, w, options)
+      return [] if ids_all.blank?
+      page = options[:page] || 1
+      limit = options[:limit] || 10
+      offset = (page - 1) * limit
+      ids = ids_all[offset, limit]
+      hmget(type,ids)
+    end
+    
+    def self.query(type, text, options = {})
+      tm = Time.now
+      ids_all = Redis::Search.query_ids(type, text, options)
+      return [] if ids_all.blank?
+      page = options[:page] || 1
+      limit = options[:limit] || 10
+      offset = (page - 1) * limit
+      ids = ids_all[offset, limit]
+      Search.info("{#{type} : \"#{text}\"} | Time spend: #{Time.now - tm}s")
+      hmget(type,ids)
+    end
+    
+    def self.complete_and_query(type, text, options = {})
+      ids_complete = Redis::Search.complete_ids(type, text, options)
+      ids_query = Redis::Search.query_ids(type, text, options)
+      ids_all = ids_complete | ids_query
+      page = options[:page] || 1
+      limit = options[:limit] || 10
+      offset = (page - 1) * limit
+      ids = ids_all[offset, limit]
+      hmget(type,ids)
+    end
     # Use for short title search, this method is search by chars, for example Tag, User, Category ...
     # 
     # h3. params:
@@ -18,7 +50,7 @@ class Redis
     # * Redis::Search.complete("Tag","re") => ["Redis", "Redmine"]
     # * Redis::Search.complete("Tag","red") => ["Redis", "Redmine"]
     # * Redis::Search.complete("Tag","redi") => ["Redis"]
-    def self.complete(type, w, options = {})
+    def self.complete_ids(type, w, options = {})
       page = options[:page] || 1
       limit = options[:limit] || 10 
       order = options[:order] || "desc"
@@ -89,13 +121,10 @@ class Redis
           Redis::Search.config.redis.expire(temp_store_key,86400)
         end
       end
-      skip = (page - 1) * limit
       ids = Redis::Search.config.redis.sort(temp_store_key,
-                                            :limit => [skip,limit], 
                                             :by => Search.mk_score_key(type,"*"),
                                             :order => order)
-      return [] if ids.blank?
-      hmget(type,ids)
+      
     end
 
     # Search items, this will split words by Libmmseg
@@ -106,11 +135,10 @@ class Redis
     #   :limit    result limit
     # h3. usage:
     # * Redis::Search.query("Tag","Ruby vs Python")
-    def self.query(type, text,options = {})
-      tm = Time.now
+    def self.query_ids(type, text,options = {})
       result = []
       
-      limit = options[:limit] || 10
+      order = options[:order] || "desc"
       sort_field = options[:sort_field] || "id"
       conditions = options[:conditions] || []
       
@@ -167,12 +195,9 @@ class Redis
       
       # 根据需要的数量取出 ids
       ids = Search.config.redis.sort(temp_store_key,
-                                            :limit => [0,limit], 
-                                            :by => Search.mk_score_key(type,"*"),
-                                            :order => "desc")
-      result = hmget(type,ids, :sort_field => sort_field)
-      Search.info("{#{type} : \"#{text}\"} | Time spend: #{Time.now - tm}s")
-      result 
+                                      :by => Search.mk_score_key(type,"*"),
+                                      :order => order)
+      
     end
   
     protected
