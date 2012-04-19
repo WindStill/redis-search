@@ -16,7 +16,7 @@ class Redis
         ext_fields = options[:ext_fields] || []
         score_field = options[:score_field] || :created_at
         condition_fields = options[:condition_fields] || []
-        index_condition = MultiJson.encode options[:index_condition]
+        index_condition = MultiJson.dump options[:index_condition]
         # Add score field to ext_fields
         ext_fields |= [score_field]
         # Add condition fields to ext_fields

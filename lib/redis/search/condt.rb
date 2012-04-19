@@ -2,10 +2,10 @@ class Redis
   module Search
     class Condt
       def self.make_condition(json)
-        if json == "null" or MultiJson.decode(json).blank?
+        if json == "null" or MultiJson.load(json).blank?
           return "true"
         end
-        hash = MultiJson.decode(json)
+        hash = MultiJson.load(json)
         c = ""
         hash.keys.each_with_index do |key,i|
           if key.to_s.include? " "
