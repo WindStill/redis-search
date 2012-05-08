@@ -65,7 +65,7 @@ class Redis
       
       last_rank = limit * page
       if start = Redis::Search.config.redis.zrank(key,prefix)
-        count = last_rank
+        count = last_rank * rangelen
         max_range = start+(rangelen*last_rank)-1
         range = Redis::Search.config.redis.zrange(key,start,max_range)
         while prefix_matchs.length <= count
